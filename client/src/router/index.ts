@@ -22,7 +22,7 @@ const router = createRouter({
         {
             path: '/tv/',
             name: 'TV Home',
-            component: () => import('@/views/TV/Home.vue'),
+            component: import.meta.env.MODE === 'car' ? () => import('@/views/Car/Watch.vue') : () => import('@/views/TV/Home.vue'),
         },
         {
             path: '/tv/watch/:display_channel_id',

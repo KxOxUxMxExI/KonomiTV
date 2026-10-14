@@ -44,6 +44,8 @@ export interface ITwitterPanelPostTarget {
  * IClientSettings とは異なり、同期対象外の設定キーも含まれる
  */
 export interface ILocalClientSettings extends IClientSettings {
+    // 車載画面の前回局。サーバー同期対象に含めず、このオリジン内だけで保存する。
+    car_last_channel_id: string | null;
     last_synced_at: number;
     showed_panel_last_time: boolean;
     selected_twitter_panel_account: {kind: 'Twitter' | 'Bluesky' | 'Linked'; id: number;} | null;
@@ -138,6 +140,7 @@ export interface ILocalClientSettings extends IClientSettings {
  * 以下の設定は、必ず UI 上の表示順序通りに記述しなければならない
  */
 export const ILocalClientSettingsDefault: ILocalClientSettings = {
+    car_last_channel_id: null,
 
     // ***** 設定画面から直接変更できない設定値 *****
 

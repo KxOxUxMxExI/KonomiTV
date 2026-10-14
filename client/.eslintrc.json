@@ -19,6 +19,7 @@
     ],
     "ignorePatterns": [
         "dist/",
+        "dist-car/",
         "node_modules/"
     ],
     "rules": {

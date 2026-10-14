@@ -10,7 +10,7 @@ import vuetify, { transformAssetUrls } from 'vite-plugin-vuetify';
 
 // Vite の設定
 // https://vitejs.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
     // バージョン情報をビルド時に埋め込む
     // ref: https://stackoverflow.com/a/68093777/17124142
     define: {
@@ -19,6 +19,7 @@ export default defineConfig({
     },
     // ビルドの設定
     build: {
+        outDir: mode === 'car' ? 'dist-car' : 'dist',
         chunkSizeWarningLimit: 3 * 1024 * 1024,  // 3MB に緩和
         rollupOptions: {
             output: {
@@ -96,9 +97,9 @@ export default defineConfig({
             ],
             // manifest.json の内容
             manifest: {
-                name: 'KonomiTV',
-                short_name: 'KonomiTV',
-                start_url: '.',
+                name: mode === 'car' ? 'KomenoTV' : 'KonomiTV',
+                short_name: mode === 'car' ? 'KomenoTV' : 'KonomiTV',
+                start_url: mode === 'car' ? '/tv/' : '.',
                 display: 'standalone',
                 theme_color: '#0D0807',
                 background_color: '#1E1310',
@@ -140,4 +141,4 @@ export default defineConfig({
             comlink(),
         ]
     }
-});
+}));

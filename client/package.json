@@ -8,6 +8,8 @@
         "akebi:nix": "../server/thirdparty/Akebi/akebi-https-server.elf --listen-address 0.0.0.0:7001 --proxy-pass-url http://127.0.0.77:7011/ --keyless-server-url https://akebi.konomi.tv/ > /dev/null",
         "dev": "concurrently --raw \"npm:akebi\" \"vite\"",
         "build": "vue-tsc --noEmit && vite build",
+        "build:car": "vue-tsc --noEmit && vite build --mode car",
+        "test:car": "node --test tests/car-controls.test.mjs tests/car-gateway.test.mjs tests/car-player.test.mjs",
         "preview": "concurrently --raw \"npm:akebi\" \"vite preview\"",
         "lint": "eslint . --fix --ignore-path .gitignore",
         "typecheck": "vue-tsc --noEmit"

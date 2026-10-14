@@ -170,3 +170,7 @@ server/core.*
 
 # ignore .gitkeep
 !.gitkeep
+
+# KomenoTV runtime logs, process ownership and validation artifacts
+.komeno/
+/client/dist-car/

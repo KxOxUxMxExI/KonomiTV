@@ -1,0 +1,57 @@
+.car-view {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    background: #000;
+    color: rgb(var(--v-theme-text));
+}
+.car-video { width: 100%; height: 100%; object-fit: contain; }
+.car-video-button { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; }
+.car-header {
+    position: absolute; top: 0; inset-inline: 0; z-index: 2;
+    display: flex; align-items: center; gap: 16px; padding: 12px 20px;
+    background: rgb(var(--v-theme-background) / 0.92);
+    pointer-events: none;
+    h1 { font-size: 22px; font-weight: 700; }
+    span { font-size: 14px; }
+    &__hint { margin-left: auto; }
+}
+.car-menu {
+    position: absolute; inset-inline: 0; bottom: 0; z-index: 3;
+    padding: 12px 16px; background: rgb(var(--v-theme-background) / 0.94);
+}
+.car-program {
+    display: flex; align-items: center; gap: 16px; margin-bottom: 10px; white-space: nowrap;
+    strong { flex-shrink: 0; font-size: 19px; }
+    span { overflow: hidden; text-overflow: ellipsis; font-size: 16px; }
+}
+.car-channels {
+    display: flex; gap: 10px; overflow-x: auto; scrollbar-width: none;
+    &::-webkit-scrollbar { display: none; }
+    button {
+        flex-shrink: 0; min-height: 52px; padding: 8px 16px; border: 2px solid transparent; border-radius: 8px;
+        background: rgb(var(--v-theme-background-lighten-1)); font-size: 17px; font-weight: 700;
+        span { margin-right: 8px; font-size: 14px; font-weight: 500; }
+        &:focus-visible, &.is-selected { border-color: #E64F97; background: rgb(var(--v-theme-background-lighten-2)); outline: none; }
+    }
+}
+.car-status {
+    position: absolute; inset: 0; z-index: 4; display: flex; flex-direction: column; gap: 16px;
+    justify-content: center; align-items: center; padding: 32px; text-align: center; pointer-events: none;
+    p { max-width: 600px; padding: 16px; border-radius: 8px; background: rgb(var(--v-theme-background) / 0.92); font-size: 20px; }
+    button { pointer-events: auto; padding: 12px 24px; border-radius: 8px; background: #B82064; font-size: 20px; }
+}
+.car-candidate {
+    position: absolute; top: 68px; inset-inline: 12%; z-index: 4; padding: 12px 20px;
+    border-radius: 8px; background: rgb(var(--v-theme-background) / 0.94); text-align: center; font-size: 22px;
+}
+.car-view--fullscreen {
+    // 透明な局ボタンを残し、車側がキーの代わりにフォーカスを送る場合も選局できるようにする。
+    .car-header, .car-menu { opacity: 0; pointer-events: none; }
+    .car-candidate { top: auto; bottom: 24px; }
+}
+@media (max-width: 600px) {
+    .car-header__hint { display: none; }
+    .car-program { flex-direction: column; align-items: flex-start; gap: 4px; }
+    .car-program span { width: 100%; }
+}
