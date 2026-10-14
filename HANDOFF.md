@@ -27,6 +27,7 @@
 - 回帰テスト15件合格: 選局debounce、復元、折返し、キャンセル、再生の世代管理・再試行、プロキシのGET制限・パス制限・接続解放。
 - Edgeの800x480画面でキー・ホイール・rootへのwheel・フォーカス選局、Enter、Escape、ブラウザBack、再読込復元を確認。コンソールエラー、コメントWebSocket、設定書き込みは0。
 - 新HTTPSポートからFFprobeでhevc / 854x480 / AACを確認。FFmpegで実配信1フレームをデコードして接続を終了。終了後healthのactiveStreams=0。
+- 初回表示中のバックグラウンド化では接続せず、表示復帰で480p HEVCへ接続することもブラウザで確認。この検証だけはPCのHEVC能力判定を模擬し、再生成功の根拠にはしていない。
 - このPCのEdgeはMSE HEVC非対応。Edgeで映像再生できたとは扱わない。
 - 独立した読み取りレビューとメインレビューを実施。家庭用経路を変更する指摘なし。
 - Yarn audit: high 19 / moderate 2 / critical 0（依存経路の件数）。主にlint/build用、web-bmlのXMLBuilderも含む。車載画面はBMLを起動しない。上流依存の一括更新はしていない。
@@ -42,7 +43,7 @@ client/でNode 20を使用して corepack yarn build:car を実行。出力はdi
 
 ローカル検証証跡はGit対象外の .komeno/ に保存:
 
-- tests-final.log、build-car.log、browser-acceptance.json、browser-acceptance.cjs
+- tests-final.log、build-car.log、browser-acceptance.json、browser-acceptance.cjs、browser-background.json
 - car-menu-800x480.png、car-fullscreen-800x480.png、480p-hevc-frame.png
 - household-before.json、household-after.json、dependency-audit.jsonl
 - processes.json、gateway/httpsの時刻付きログ

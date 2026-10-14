@@ -56,7 +56,7 @@ let disposed = false;
 
 function playChannel(channelId: string): void {
     settings.settings.car_last_channel_id = channelId;
-    player?.start(channelId);
+    if (!document.hidden) player?.start(channelId);
 }
 
 async function focusSelected(): Promise<void> {
@@ -150,7 +150,7 @@ onMounted(async () => {
     }
     controls.value = shallowReactive(new CarControls(channels.value.map(channel => channel.display_channel_id),
         settings.settings.car_last_channel_id, playChannel));
-    await focusSelected();
+    focusSelected();
     playChannel(controls.value.activeChannelId!);
     window.addEventListener('keydown', onKey, true);
     window.addEventListener('wheel', onWheel, { passive: false });
