@@ -11,14 +11,14 @@ The existing read-only channel and live-stream APIs are reused; no second tuner/
 
 Latest commander behavior was requested by the user on 2026-10-15 and supersedes the original auto-tuning/fullscreen controls.
 
-- 800x480 landscape layout; video retains its aspect ratio.
+- 800x480 landscape layout; video retains its aspect ratio. Program information and candidate overlays have opaque dark backgrounds; use valid rgba() syntax for comma-separated theme variables.
 - Exactly 480p HEVC (H.265), explicit unsupported/error state, no silent codec fallback.
 - No comments, comment WebSockets or account/settings synchronization.
-- The channel menu starts hidden. Only rotation opens it; wheel and Tab/Shift+Tab represent rotary input.
+- The header and channel menu start hidden and share the same visibility state. Only rotation opens them; wheel and Tab/Shift+Tab represent rotary input.
 - Reverse rotation relative to the previous implementation. Rotation changes only the candidate, never the playing station.
 - Press/Enter/Space commits a different candidate and starts that station. A press with no new candidate toggles playback/stop of the current station.
 - Stop closes the live connection. A later press resumes the same station. A user stop survives online/visibility recovery.
-- After 5 seconds without rotation, hide the menu and discard any unconfirmed candidate.
+- After 5 seconds without rotation, hide both header and menu and discard any unconfirmed candidate. Pressing also hides both.
 - Do not handle Back, Escape, Backspace, arrows or PageUp/PageDown. Do not insert browser history entries or select from focus events.
 - Restore the last committed station on re-entry; removed stations fall back to the first available station.
 - Release the previous stream on station change, page exit or backgrounding, with generation guards for asynchronous startup.
