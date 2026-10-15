@@ -52,6 +52,7 @@ test('press expands video and back restores the menu without changing channel', 
     control.back();
     assert.equal(control.menuVisible, true);
     assert.equal(control.activeChannelId, 'gr021');
+    control.dispose();
 });
 
 test('background cancellation and disposal prevent a stale channel switch', (t) => {
@@ -67,4 +68,67 @@ test('background cancellation and disposal prevent a stale channel switch', (t) 
     control.dispose();
     t.mock.timers.tick(CHANNEL_SETTLE_MS);
     assert.deepEqual(committed, []);
+});
+test('hides only the channel menu after five idle seconds without changing playback', (t) => {
+    t.mock.timers.enable({ apis: ['setTimeout'] });
+    const committed = [];
+    const control = new CarControls(channels, 'gr011', id => committed.push(id));
+    control.back();
+    t.mock.timers.tick(4_999);
+    assert.equal(control.menuAutoHidden, false);
+    t.mock.timers.tick(1);
+    assert.equal(control.menuAutoHidden, true);
+    assert.equal(control.menuVisible, true);
+    assert.equal(control.activeChannelId, 'gr011');
+    assert.deepEqual(committed, []);
+    control.dispose();
+});
+
+test('rotation, focus on the current channel and Back restart the idle timeout', (t) => {
+    t.mock.timers.enable({ apis: ['setTimeout'] });
+    const control = new CarControls(channels, 'gr011', () => {});
+    control.back();
+    t.mock.timers.tick(5_000);
+    control.move(1);
+    assert.equal(control.menuAutoHidden, false);
+    t.mock.timers.tick(4_000);
+    control.select(control.selectedIndex);
+    t.mock.timers.tick(4_999);
+    assert.equal(control.menuAutoHidden, false);
+    t.mock.timers.tick(1);
+    assert.equal(control.menuAutoHidden, true);
+    control.back();
+    assert.equal(control.menuAutoHidden, false);
+    t.mock.timers.tick(5_000);
+    assert.equal(control.menuAutoHidden, true);
+    control.dispose();
+});
+
+test('manual fullscreen stays fullscreen while selecting channels', (t) => {
+    t.mock.timers.enable({ apis: ['setTimeout'] });
+    const control = new CarControls(channels, 'gr011', () => {});
+    control.back();
+    control.confirm();
+    control.move(1);
+    t.mock.timers.tick(10_000);
+    assert.equal(control.menuVisible, false);
+    assert.equal(control.menuAutoHidden, false);
+    assert.equal(control.activeChannelId, 'gr021');
+    control.back();
+    assert.equal(control.menuVisible, true);
+    control.dispose();
+});
+
+test('backgrounding and disposal cancel the idle timeout', (t) => {
+    t.mock.timers.enable({ apis: ['setTimeout'] });
+    const control = new CarControls(channels, 'gr011', () => {});
+    control.back();
+    control.cancel();
+    t.mock.timers.tick(5_000);
+    assert.equal(control.menuAutoHidden, false);
+    control.back();
+    control.dispose();
+    control.activity();
+    t.mock.timers.tick(5_000);
+    assert.equal(control.menuAutoHidden, false);
 });

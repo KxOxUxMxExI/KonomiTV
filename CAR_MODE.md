@@ -13,7 +13,8 @@ The existing read-only channel and live-stream APIs are reused; no second tuner/
 - Request exactly 480p HEVC (H.265), with an explicit unsupported/error state rather than silently switching codec.
 - No comment overlay, comment WebSocket connection, or account/settings synchronization.
 - Commander rotation selects channels. Commit only the final candidate after 500 ms without rotation.
-- Press/Enter hides the car menu and expands video inside the available viewport.
+- Hide only the bottom channel menu after 5 seconds without input. Rotation, channel focus, pointer input, and Back restore/reset it; idle hiding must not change the channel or stop playback.
+- Press/Enter hides the car menu and expands video inside the available viewport. Manual fullscreen remains fullscreen during rotation.
 - Back/Escape restores the menu without leaving the player or stopping it.
 - Restore the last channel on re-entry/reconnection. Removed channels fall back to the first available channel.
 - Support keyboard, wheel and channel-button focus so native rotary focus traversal can select a channel.

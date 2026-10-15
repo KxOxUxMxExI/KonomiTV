@@ -1,6 +1,6 @@
 <template>
-    <section class="car-view" :class="{ 'car-view--fullscreen': controls?.menuVisible === false }"
-        aria-label="KomenoTV 車載テレビ">
+    <section class="car-view" :class="{ 'car-view--fullscreen': controls?.menuVisible === false, 'car-view--idle': controls?.menuAutoHidden }"
+        aria-label="KomenoTV 車載テレビ" @pointerdown="controls?.activity()">
         <video ref="video" class="car-video" playsinline autoplay
             @playing="player?.playing()" @waiting="player?.waiting()" />
         <button class="car-video-button" tabindex="-1" aria-label="全画面で表示" @click="enterFullscreen"></button>
@@ -33,7 +33,7 @@
     </section>
 </template>
 <script lang="ts" setup>
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowReactive, shallowRef } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowReactive, shallowRef, watch } from 'vue';
 
 import Channels, { ILiveChannel } from '@/services/Channels';
 import CarPlayer from '@/services/player/CarPlayer';
@@ -51,7 +51,7 @@ const settings = useSettingsStore();
 const selectedChannel = computed(() => channels.value[controls.value?.selectedIndex ?? -1]);
 let player: CarPlayer | null = null;
 let refreshTimer: ReturnType<typeof setInterval> | null = null;
-let fullscreenHistory = false;
+let menuHistory = false;
 let disposed = false;
 
 function playChannel(channelId: string): void {
@@ -66,13 +66,21 @@ async function focusSelected(): Promise<void> {
     button?.scrollIntoView({ block: 'nearest', inline: 'center' });
 }
 
+// 自動非表示でもWebViewの「戻る」がページ退出にならないよう、履歴は一段だけ作る。
+function preserveMenuHistory(): void {
+    if (menuHistory) return;
+    history.pushState({ komenoMenu: true }, '', location.href);
+    menuHistory = true;
+}
+
+watch(() => controls.value?.menuAutoHidden, hidden => {
+    if (hidden) preserveMenuHistory();
+});
+
 function enterFullscreen(): void {
     if (!controls.value) return;
-    // WebView の戻る操作がページ退出にならないよう、全画面中だけ履歴を一段作る。
-    if (controls.value.menuVisible && !fullscreenHistory) {
-        history.pushState({ komenoFullscreen: true }, '', location.href);
-        fullscreenHistory = true;
-    }
+    preserveMenuHistory();
+
     controls.value.confirm();
     player?.resume();
 }
@@ -83,7 +91,7 @@ function showMenu(): void {
 }
 
 function onPopState(): void {
-    fullscreenHistory = false;
+    menuHistory = false;
     showMenu();
 }
 
@@ -98,10 +106,10 @@ function onKey(event: KeyboardEvent): void {
     } else if (event.key === 'Enter' || event.key === ' ') {
         event.preventDefault();
         enterFullscreen();
-    } else if (['Escape', 'BrowserBack', 'Backspace'].includes(event.key) && controls.value?.menuVisible === false) {
+    } else if (['Escape', 'BrowserBack', 'Backspace'].includes(event.key) && controls.value && (!controls.value.menuVisible || controls.value.menuAutoHidden)) {
         event.preventDefault();
         showMenu();
-        if (fullscreenHistory) history.back();
+        if (menuHistory) history.back();
     }
 }
 
@@ -124,6 +132,7 @@ function onVisibility(): void {
         controls.value?.cancel();
         player?.stop();
     } else {
+        controls.value?.activity();
         retryPlayback();
     }
 }
@@ -150,6 +159,7 @@ onMounted(async () => {
     }
     controls.value = shallowReactive(new CarControls(channels.value.map(channel => channel.display_channel_id),
         settings.settings.car_last_channel_id, playChannel));
+    controls.value.back();
     focusSelected();
     playChannel(controls.value.activeChannelId!);
     window.addEventListener('keydown', onKey, true);
