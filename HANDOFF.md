@@ -14,7 +14,7 @@
 
 ## 実装した操作（2026-10-15の再指定を反映）
 
-- 480p HEVC固定、コメント接続なし、800x480、前回の確定局を車載オリジンだけに保存。
+- 480p HEVC固定、コメント接続なし、800x480、前回の確定局を車載オリジンだけに保存。可視パネル/ボタン背景は透過・画像なしの黒一色。待機・停止・エラー時は映像を黒で覆い、回転時のメニューはその上に表示する。
 - 最初は上部表示と一覧を隠す。回転（wheel / Tab / Shift+Tab）の時だけ両方を表示し、従来とは逆向きに候補を動かす。回転だけでは映像・局を変更しない。
 - 押し込み / Enter / Space: 新しい候補があれば選局確定して再生。同じ局または一覧非表示なら現在局の再生・停止を切り替える。押し込み後は上部表示と一覧を同時に隠す。
 - 回転停止5秒後に上部表示と一覧を同時に隠し、未確定候補を破棄する。隠れた候補を後から誤って選局しない。
@@ -33,6 +33,7 @@
 - 旧操作（2b7fa8ff）の自動非表示更新: 800x480のブラウザで5秒後の下部のみ非表示、回転/フォーカス/Back/Escapeによる再表示、履歴の重複防止、手動全画面の維持を確認。反映前後で家庭用HTML・7000/7010のPIDは一致し、視聴中の車載接続数は1のまま。サービス再起動・旧配布資産の削除なし。
 - 最新操作: 800x480のブラウザで回転のみ表示、方向反転、押すまで選局しないこと、押し込みで停止/再開、停止状態のonline/画面復帰維持、履歴非干渉を確認。メディアの能力/再生状態と配信は模擬し、実HEVC再生の根拠にはしない。更新版を7100へ反映済み。家庭用HTML・PIDは今回も一致し、サービスを再起動せず旧資産も保持。
 - 番組情報の背景修正: Vuetifyのテーマ変数はカンマ区切り（30,19,16）なので、rgb(var(...) / alpha)は無効で透明になっていた。rgba(var(...), alpha)へ修正し、一覧/候補は不透明なテーマ背景色に変更。800x480のブラウザと明るい背景の表示確認で番組文字のコントラスト15.75:1、上下の表示/非表示連動を確認。操作ロジックは変更なし。7100へ反映し、今回も家庭用HTML・PIDは一致。
+- 黒背景更新: 800x480のブラウザで各背景がrgb(0,0,0)・background-imageなし、待機表示が画面全体を覆うこと、待機中も選局メニューが上に出ることを確認。明るい模様を映像の代わりに置いた表示用フィクスチャで確認し、実HEVC再生の検証とは分けている。lint/型チェック/車載ビルド成功。7100へ反映済みで、家庭用HTML・PIDは一致。
 - このPCのEdgeはMSE HEVC非対応。Edgeで映像再生できたとは扱わない。
 - 独立した読み取りレビューとメインレビューを実施。家庭用経路を変更する指摘なし。
 - Yarn audit: high 19 / moderate 2 / critical 0（依存経路の件数）。主にlint/build用、web-bmlのXMLBuilderも含む。車載画面はBMLを起動しない。上流依存の一括更新はしていない。
@@ -49,6 +50,7 @@ client/でNode 20を使用して corepack yarn build:car を実行。出力はdi
 ローカル検証証跡はGit対象外の .komeno/ に保存:
 
 - tests-final.log、build-car.log、browser-acceptance.json、browser-acceptance.cjs、browser-background.json
+- black-build.log、black-browser.json、black-browser.cjs、black-waiting-800x480.png、black-waiting-menu-800x480.png
 - overlay-build.log、overlay-browser.json、overlay-browser.cjs、overlay-visible-800x480.png、overlay-hidden-800x480.png
 - commander-tests.log、commander-build.log、commander-browser.json、commander-browser.cjs、commander-candidate-800x480.png
 - auto-hide-tests.log、auto-hide-build.log、auto-hide-browser.json、auto-hide-browser.cjs、auto-hide-visible.png、auto-hide-hidden.png
