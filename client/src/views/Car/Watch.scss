@@ -46,11 +46,6 @@
     border-radius: 8px; background: rgb(var(--v-theme-background) / 0.94); text-align: center; font-size: 22px;
 }
 .car-view--idle .car-menu { opacity: 0; pointer-events: none; }
-.car-view--fullscreen {
-    // 透明な局ボタンを残し、車側がキーの代わりにフォーカスを送る場合も選局できるようにする。
-    .car-header, .car-menu { opacity: 0; pointer-events: none; }
-    .car-candidate { top: auto; bottom: 24px; }
-}
 @media (max-width: 600px) {
     .car-header__hint { display: none; }
     .car-program { flex-direction: column; align-items: flex-start; gap: 4px; }

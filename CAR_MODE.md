@@ -9,18 +9,20 @@ The existing read-only channel and live-stream APIs are reused; no second tuner/
 
 ## Acceptance
 
+Latest commander behavior was requested by the user on 2026-10-15 and supersedes the original auto-tuning/fullscreen controls.
+
 - 800x480 landscape layout; video retains its aspect ratio.
-- Request exactly 480p HEVC (H.265), with an explicit unsupported/error state rather than silently switching codec.
-- No comment overlay, comment WebSocket connection, or account/settings synchronization.
-- Commander rotation selects channels. Commit only the final candidate after 500 ms without rotation.
-- Hide only the bottom channel menu after 5 seconds without input. Rotation, channel focus, pointer input, and Back restore/reset it; idle hiding must not change the channel or stop playback.
-- Press/Enter hides the car menu and expands video inside the available viewport. Manual fullscreen remains fullscreen during rotation.
-- Back/Escape restores the menu without leaving the player or stopping it.
-- Restore the last channel on re-entry/reconnection. Removed channels fall back to the first available channel.
-- Support keyboard, wheel and channel-button focus so native rotary focus traversal can select a channel.
-- Destroy the previous stream on a channel change, page exit, or backgrounding; reconnect when visible/online.
-- Playback failures provide a visible retry action. No household configuration or authentication endpoints are proxied.
-- Android Auto's system dock and Fermata's native chrome are outside the web UI's control.
+- Exactly 480p HEVC (H.265), explicit unsupported/error state, no silent codec fallback.
+- No comments, comment WebSockets or account/settings synchronization.
+- The channel menu starts hidden. Only rotation opens it; wheel and Tab/Shift+Tab represent rotary input.
+- Reverse rotation relative to the previous implementation. Rotation changes only the candidate, never the playing station.
+- Press/Enter/Space commits a different candidate and starts that station. A press with no new candidate toggles playback/stop of the current station.
+- Stop closes the live connection. A later press resumes the same station. A user stop survives online/visibility recovery.
+- After 5 seconds without rotation, hide the menu and discard any unconfirmed candidate.
+- Do not handle Back, Escape, Backspace, arrows or PageUp/PageDown. Do not insert browser history entries or select from focus events.
+- Restore the last committed station on re-entry; removed stations fall back to the first available station.
+- Release the previous stream on station change, page exit or backgrounding, with generation guards for asynchronous startup.
+- No household settings/authentication endpoints are proxied. Native Android Auto/Fermata bars remain outside the web UI's control.
 
 ## Code and checks
 

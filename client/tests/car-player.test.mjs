@@ -91,3 +91,46 @@ test('commander press reconnects after a stream error', async () => {
     assert.equal(state.players[1].source.url, '/api/streams/live/gr011/480p-hevc/mpegts');
     player.stop();
 });
+
+test('press stops the live connection and the next press restarts the same channel', async () => {
+    const { player, video, reports } = setup();
+    await player.start('gr011');
+    player.toggle();
+    assert.equal(player.isUserStopped, true);
+    assert.equal(state.players[0].destroyed, 1);
+    assert.equal(video.paused, true);
+    assert.match(reports.at(-1)[0], /停止中/);
+    player.stop();
+    assert.equal(player.isUserStopped, true);
+    player.toggle();
+    await flush();
+    assert.equal(player.isUserStopped, false);
+    assert.equal(state.players.length, 2);
+    assert.equal(state.players[1].source.url, '/api/streams/live/gr011/480p-hevc/mpegts');
+    player.stop();
+});
+
+test('press can cancel startup before codec capability resolution', async () => {
+    const { player } = setup();
+    let complete;
+    state.worker = () => new Promise(resolve => { complete = resolve; });
+    const starting = player.start('gr011');
+    player.toggle();
+    complete(false);
+    await starting;
+    assert.equal(player.isUserStopped, true);
+    assert.equal(state.players.length, 0);
+});
+
+test('press resumes blocked autoplay instead of stopping the loaded stream', async () => {
+    const { player, video } = setup();
+    video.play = async () => { throw new Error('Autoplay blocked'); };
+    await player.start('gr011');
+    video.play = async () => { video.paused = false; };
+    player.toggle();
+    await flush();
+    assert.equal(player.isUserStopped, false);
+    assert.equal(state.players.length, 1);
+    assert.equal(video.paused, false);
+    player.stop();
+});

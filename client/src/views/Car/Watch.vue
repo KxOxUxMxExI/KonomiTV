@@ -1,19 +1,19 @@
 <template>
-    <section class="car-view" :class="{ 'car-view--fullscreen': controls?.menuVisible === false, 'car-view--idle': controls?.menuAutoHidden }"
-        aria-label="KomenoTV 車載テレビ" @pointerdown="controls?.activity()">
+    <section class="car-view" :class="{ 'car-view--idle': !controls?.menuVisible }"
+        aria-label="KomenoTV 車載テレビ">
         <video ref="video" class="car-video" playsinline autoplay
             @playing="player?.playing()" @waiting="player?.waiting()" />
-        <button class="car-video-button" tabindex="-1" aria-label="全画面で表示" @click="enterFullscreen"></button>
+        <button class="car-video-button" tabindex="-1" aria-label="再生・停止" @click="pressCommander"></button>
         <header class="car-header">
             <h1>KomenoTV</h1><span>480p・HEVC</span>
-            <span class="car-header__hint">回す: 選局 / 押す: 全画面 / 戻る: メニュー</span>
+            <span class="car-header__hint">回す: 候補 / 押す: 決定・再生/停止</span>
         </header>
         <div v-if="status" class="car-status" role="status">
             <p>{{ status }}</p>
             <button v-if="retryAvailable" @click="retryPlayback">再試行</button>
         </div>
         <div v-if="controls && controls.selectedIndex !== controls.activeIndex" class="car-candidate" role="status">
-            切替予定：{{ selectedChannel?.name }}
+            押し込みで選局：{{ selectedChannel?.name }}
         </div>
         <nav class="car-menu" aria-label="チャンネル選択">
             <div class="car-program">
@@ -25,7 +25,7 @@
                 <button v-for="(channel, index) in channels" :key="channel.display_channel_id"
                     :class="{ 'is-selected': index === controls?.selectedIndex }"
                     :aria-current="index === controls?.activeIndex ? 'true' : undefined"
-                    @focus="controls?.select(index)" @click="enterFullscreen">
+                    @click="chooseChannel(index)">
                     <span>{{ channel.channel_number }}</span>{{ channel.name }}
                 </button>
             </div>
@@ -33,7 +33,7 @@
     </section>
 </template>
 <script lang="ts" setup>
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowReactive, shallowRef, watch } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowReactive, shallowRef } from 'vue';
 
 import Channels, { ILiveChannel } from '@/services/Channels';
 import CarPlayer from '@/services/player/CarPlayer';
@@ -51,7 +51,6 @@ const settings = useSettingsStore();
 const selectedChannel = computed(() => channels.value[controls.value?.selectedIndex ?? -1]);
 let player: CarPlayer | null = null;
 let refreshTimer: ReturnType<typeof setInterval> | null = null;
-let menuHistory = false;
 let disposed = false;
 
 function playChannel(channelId: string): void {
@@ -66,50 +65,25 @@ async function focusSelected(): Promise<void> {
     button?.scrollIntoView({ block: 'nearest', inline: 'center' });
 }
 
-// 自動非表示でもWebViewの「戻る」がページ退出にならないよう、履歴は一段だけ作る。
-function preserveMenuHistory(): void {
-    if (menuHistory) return;
-    history.pushState({ komenoMenu: true }, '', location.href);
-    menuHistory = true;
+function pressCommander(): void {
+    if (controls.value && !controls.value.confirm()) player?.toggle();
 }
 
-watch(() => controls.value?.menuAutoHidden, hidden => {
-    if (hidden) preserveMenuHistory();
-});
-
-function enterFullscreen(): void {
-    if (!controls.value) return;
-    preserveMenuHistory();
-
-    controls.value.confirm();
-    player?.resume();
-}
-
-function showMenu(): void {
-    controls.value?.back();
-    focusSelected();
-}
-
-function onPopState(): void {
-    menuHistory = false;
-    showMenu();
+function chooseChannel(index: number): void {
+    controls.value?.select(index);
+    pressCommander();
 }
 
 function onKey(event: KeyboardEvent): void {
-    const direction = ['ArrowRight', 'ArrowDown', 'PageDown'].includes(event.key) || (event.key === 'Tab' && !event.shiftKey) ? 1 :
-        ['ArrowLeft', 'ArrowUp', 'PageUp'].includes(event.key) || (event.key === 'Tab' && event.shiftKey) ? -1 : 0;
-    if (direction) {
+    // 回転をTabで送るWebViewにも対応し、戻る・方向キーはブラウザへ渡す。
+    if (event.ctrlKey || event.altKey || event.metaKey) return;
+    if (event.key === 'Tab') {
         event.preventDefault();
-        event.stopPropagation();
-        controls.value?.move(direction);
+        controls.value?.move(event.shiftKey ? -1 : 1);
         focusSelected();
     } else if (event.key === 'Enter' || event.key === ' ') {
         event.preventDefault();
-        enterFullscreen();
-    } else if (['Escape', 'BrowserBack', 'Backspace'].includes(event.key) && controls.value && (!controls.value.menuVisible || controls.value.menuAutoHidden)) {
-        event.preventDefault();
-        showMenu();
-        if (menuHistory) history.back();
+        if (!event.repeat) pressCommander();
     }
 }
 
@@ -127,13 +101,17 @@ function retryPlayback(): void {
     else location.reload();
 }
 
+function reconnectPlayback(): void {
+    // ユーザーが止めた再生は、通信復旧や画面復帰だけでは再開しない。
+    if (!player?.isUserStopped) retryPlayback();
+}
+
 function onVisibility(): void {
     if (document.hidden) {
         controls.value?.cancel();
         player?.stop();
     } else {
-        controls.value?.activity();
-        retryPlayback();
+        reconnectPlayback();
     }
 }
 
@@ -159,14 +137,11 @@ onMounted(async () => {
     }
     controls.value = shallowReactive(new CarControls(channels.value.map(channel => channel.display_channel_id),
         settings.settings.car_last_channel_id, playChannel));
-    controls.value.back();
-    focusSelected();
     playChannel(controls.value.activeChannelId!);
     window.addEventListener('keydown', onKey, true);
     window.addEventListener('wheel', onWheel, { passive: false });
-    window.addEventListener('popstate', onPopState);
     document.addEventListener('visibilitychange', onVisibility);
-    window.addEventListener('online', retryPlayback);
+    window.addEventListener('online', reconnectPlayback);
     // 番組名だけ更新し、視聴中のチャンネル順や選局タイマーを変えない。
     refreshTimer = setInterval(async () => {
         const refreshed = await Channels.fetchAllChannels();
@@ -183,9 +158,8 @@ onBeforeUnmount(() => {
     if (refreshTimer !== null) clearInterval(refreshTimer);
     window.removeEventListener('keydown', onKey, true);
     window.removeEventListener('wheel', onWheel);
-    window.removeEventListener('popstate', onPopState);
     document.removeEventListener('visibilitychange', onVisibility);
-    window.removeEventListener('online', retryPlayback);
+    window.removeEventListener('online', reconnectPlayback);
 });
 </script>
 <style lang="scss" scoped src="./Watch.scss"></style>

@@ -7,6 +7,8 @@ export default class CarPlayer {
     private player: mpegts.Player | null = null;
     private generation = 0;
     private channelId: string | null = null;
+    private starting = false;
+    private userStopped = false;
 
     constructor(
         private readonly video: HTMLVideoElement,
@@ -16,12 +18,14 @@ export default class CarPlayer {
     async start(channelId: string): Promise<void> {
         this.stop();
         this.channelId = channelId;
+        this.userStopped = false;
         const generation = this.generation;
         // HEVC が使えない環境では、画質・コーデックを黙って変更しない。
         if (!mpegts.getFeatureList().mseH265Playback) {
             this.report('この環境ではHEVCを再生できません。対応するFermata／ブラウザで開いてください。', false);
             return;
         }
+        this.starting = true;
         this.report('チューナーに接続しています…', false);
         try {
             const workerSupported = await mpegts.supportWorkerForMSEH265Playback();
@@ -49,6 +53,8 @@ export default class CarPlayer {
             });
             player.attachMediaElement(this.video);
             player.load();
+            if (generation !== this.generation) return;
+            this.starting = false;
             await this.video.play().catch(() => {
                 if (generation === this.generation) this.report('押し込みで再生を開始します。', true);
             });
@@ -57,6 +63,23 @@ export default class CarPlayer {
             console.error('[KomenoTV] Failed to initialize playback:', error);
             this.stop();
             this.report('再生を開始できませんでした。再試行してください。', true);
+        } finally {
+            if (generation === this.generation) this.starting = false;
+        }
+    }
+
+    get isUserStopped(): boolean {
+        return this.userStopped;
+    }
+
+    toggle(): void {
+        if (this.starting || (this.player !== null && !this.video.paused)) {
+            this.userStopped = true;
+            this.stop();
+            this.report('停止中（押し込みで再生）', false);
+        } else {
+            this.userStopped = false;
+            this.resume();
         }
     }
 
@@ -81,6 +104,7 @@ export default class CarPlayer {
     }
 
     stop(): void {
+        this.starting = false;
         this.generation++;
         this.player?.destroy();
         this.player = null;
