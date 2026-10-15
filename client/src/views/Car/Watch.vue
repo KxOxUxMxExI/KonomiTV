@@ -12,9 +12,6 @@
             <p>{{ status }}</p>
             <button v-if="retryAvailable" @click="retryPlayback">再試行</button>
         </div>
-        <div v-if="controls && controls.selectedIndex !== controls.activeIndex" class="car-candidate" role="status">
-            押し込みで選局：{{ selectedChannel?.name }}
-        </div>
         <nav class="car-menu" aria-label="チャンネル選択">
             <div class="car-program">
                 <strong>{{ selectedChannel?.name ?? 'チャンネルを取得中…' }}</strong>

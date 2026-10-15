@@ -11,7 +11,7 @@ The existing read-only channel and live-stream APIs are reused; no second tuner/
 
 Latest commander behavior was requested by the user on 2026-10-15 and supersedes the original auto-tuning/fullscreen controls.
 
-- 800x480 landscape layout; video retains its aspect ratio. All visible car UI panel and button backgrounds are solid opaque black. Waiting, stopped and error overlays cover the video with black while keeping the rotary menu above them.
+- 800x480 landscape layout; video retains its aspect ratio. The header and menu container are transparent. Only the program-information row uses 60% black; channel buttons retain their original theme colors and pink selection border. Do not show the separate press-to-tune candidate message. Waiting, stopped and error overlays cover the video with black while keeping the rotary menu above them.
 - Exactly 480p HEVC (H.265), explicit unsupported/error state, no silent codec fallback.
 - No comments, comment WebSockets or account/settings synchronization.
 - The header and channel menu start hidden and share the same visibility state. Only rotation opens them; wheel and Tab/Shift+Tab represent rotary input.
